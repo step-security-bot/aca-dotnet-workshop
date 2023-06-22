@@ -35,7 +35,17 @@ jobs:
       if : ${{ github.event.inputs.teardown != 'true' }}
       name: Lint bicep files
       steps:
-      - uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       - name: Perform linting
         run: az bicep build --f bicep/main.bicep
 
@@ -46,16 +56,21 @@ jobs:
       name: Create RG and Validate bicep template
       needs: [ lint ]
       steps:
-      - uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Create Resource Group if does not exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@fa0f960f00db49b95fdb54328a767aee31e80105 # v1.0.7
         with:
           inlineScript: |
             if [[ $(az group exists -n ${{ vars.RESOURCE_GROUP }}) == true ]]
@@ -66,7 +81,7 @@ jobs:
               echo "Resource group created"
             fi
 
-      - uses: azure/arm-deploy@v1
+      - uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         name: Run validation
         with:
           deploymentName: ${{ github.run_number }}
@@ -83,14 +98,19 @@ jobs:
     needs: [ validate ]
     name: Run what-if on the bicep template
     steps:
-      - uses: actions/checkout@v3
-      - uses: azure/login@v1
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         name: Sign in to Azure
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: azure/arm-deploy@v1
+      - uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         name: Run what-if
         with:
           resourceGroupName: ${{ vars.RESOURCE_GROUP }}
@@ -105,15 +125,20 @@ jobs:
     if : ${{ vars.CONTAINER_REGISTRY_NAME != '' }}
     needs: [ preview ]
     steps:
-      - uses: actions/checkout@v3
-      - uses: azure/login@v1
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         name: Sign in to Azure
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Create ACR ${{ vars.CONTAINER_REGISTRY_NAME }} if does not exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@fa0f960f00db49b95fdb54328a767aee31e80105 # v1.0.7
         with:
           inlineScript: | 
             if [[ $(az acr check-name -n ${{ vars.CONTAINER_REGISTRY_NAME }}  -o tsv --query "nameAvailable") == false ]]
@@ -130,7 +155,7 @@ jobs:
               echo "ACR created"
             fi
       - name: Import images from GitHub Container Registry
-        uses: azure/CLI@v1
+        uses: azure/CLI@fa0f960f00db49b95fdb54328a767aee31e80105 # v1.0.7
         with:
           inlineScript: |
             az acr import --name ${{ vars.CONTAINER_REGISTRY_NAME }} --source ${{ env.REGISTRY }}/${{ env.BACKEND_PROCESSOR_IMAGE_NAME }}:latest --image tasksmanager/tasksmanager-backend-processor --force
@@ -144,14 +169,19 @@ jobs:
     needs: [ create-acr]
     name: Deploy to Azure subscription with ACR
     steps:
-      - uses: actions/checkout@v3
-      - uses: azure/login@v1
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         name: Sign in to Azure
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: azure/arm-deploy@v1
+      - uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         id: deployment-with-acr-images
         name: Deploy to Azure subscription
         with:
@@ -169,14 +199,19 @@ jobs:
     needs: [ preview ]
     name: Deploy to Azure subscription with GHCR
     steps:
-      - uses: actions/checkout@v3
-      - uses: azure/login@v1
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         name: Sign in to Azure
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: azure/arm-deploy@v1
+      - uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         id: deployment-with-ghcr-images
         name: Deploy to Azure subscription
         with:
@@ -192,15 +227,15 @@ jobs:
     runs-on: ubuntu-latest
     if : ${{ github.event.inputs.teardown == 'true' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: azure/login@v1
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # v1.4.7
         name: Sign in to Azure
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Delete Resource Group if exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@fa0f960f00db49b95fdb54328a767aee31e80105 # v1.0.7
         with:
           inlineScript: |
             if [[ $(az group exists -n ${{ vars.RESOURCE_GROUP }}) == true ]]

@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /TasksTracker.Processor.Backend.Svc
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /TasksTracker.Processor.Backend.Svc
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /TasksTracker.TasksManager.Backend.Api
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /TasksTracker.TasksManager.Backend.Api
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /TasksTracker.WebPortal.Frontend.Ui
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /TasksTracker.WebPortal.Frontend.Ui
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /docs/.devcontainer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /docs
+    schedule:
+      interval: daily
